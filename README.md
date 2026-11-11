@@ -116,7 +116,7 @@ MCP 适合“Agent 读取上下文 → 调用工具 → 查看结果 → 再决�
 
 ## 工具能力
 
-完整工具清单见 [`docs/tools.md`](./docs/tools.md)，包含发布、草稿、知识库、媒体、营销、评论、创作和运营观测能力。
+完整工具清单见 [`docs/tools.md`](./docs/tools.md)，国内 Agent 配置见 [`docs/domestic-agents.md`](./docs/domestic-agents.md)，包含发布、草稿、知识库、媒体、营销、评论、创作和运营观测能力。
 
 ## 安全注意事项
 
@@ -141,3 +141,4 @@ MCP 适合“Agent 读取上下文 → 调用工具 → 查看结果 → 再决�
 ## License
 
 文档和示例采用 MIT License。OmniPost 产品本体的授权以官方条款为准。
+
