@@ -1,99 +1,143 @@
 # OmniPost MCP 使用指南
 
-OmniPost MCP 是 OmniPost 的 AI Agent 接入说明与配置示例项目。本仓库只提供使用文档、工具清单、调用流程和客户端配置示例，不包含 OmniPost MCP 服务端源码。
+OmniPost MCP 是 OmniPost AI 的模型上下文协议（MCP）接入方式。它把 OmniPost 的 AI 创作、平台分发、账号管理、评论转化和数据分析能力暴露给 Claude Desktop、Cursor、Windsurf、Codex、OpenClaw 以及其他兼容 MCP 的 AI Agent。
 
-## OmniPost MCP 能做什么
+本仓库只包含公开使用指南、配置示例和能力说明，不包含 MCP 服务端实现代码。
 
-通过一个 MCP 连接，让 Claude、Codex、Cursor、OpenClaw、Cline 等客户端调用 OmniPost 的内容运营能力：
+## OmniPost 平台介绍
 
-- **发布与分发**：查看平台和账号状态，检查内容，创建发布提案，支持草稿、预览、定时和自动执行模式。
-- **内容管理**：创建和更新文章草稿，查看文章，管理灵感和笔记。
-- **知识库**：列出知识库，导入文本或链接，搜索私有知识内容。
-- **媒体处理**：上传图片、视频等 Base64 或 Data URL 媒体并获得可用于发布的 URL。
-- **营销策划**：营销诊断、活动计划、跨平台内容矩阵、转化信号复盘。
-- **评论运营**：扫描未回复评论和高价值评论，分析评论并生成回复草稿。
-- **创作辅助**：改写、翻译、摘要等创意工具。
-- **治理与观测**：权限检查、积分检查、系统健康、文章表现和 Agent 操作记录。
+OmniPost 是一个 AI 原生的内容运营和社交媒体矩阵管理平台，覆盖“选题 → 创作 → 审核 → 排期 → 多平台发布 → 评论/私信回复 → 数据看板”完整链路。
 
-## 接入方式
+平台主要能力包括：
 
-### Claude Code
+- **灵感与选题**：发现热点、关键词和可复用的内容方向。
+- **人设实验室**：分析已有账号的语气、内容支柱和爆款模式，形成可复制的人设策略。
+- **AI 创作中心**：生成文章、平台原生文案、图片、短视频、音频和音乐。
+- **智能分发**：一份内容适配多个平台的格式、长度、话题标签和媒体要求。
+- **排期与发布**：支持草稿、预览、定时和自动发布，并返回各平台独立结果。
+- **评论与私信转化**：识别高意向评论，按规则生成或发送回复，并沉淀线索。
+- **统一数据看板**：汇总曝光、互动、粉丝增长、发布状态和转化数据。
+- **账号安全**：只有在用户明确授权后连接第三方账号，支持随时解绑；平台授权数据用于账号识别、刷新授权、发布用户批准的内容和同步发布状态。
+
+官方平台介绍：[www.omnipost.cc](https://www.omnipost.cc/)。
+
+## 支持的平台
+
+OmniPost 官方页面列出的平台包括：
+
+### 中国大陆平台
+
+微信公众号、 小红书、抖音、知乎、今日头条、哔哩哔哩、微博、快手、百家号、搜狐号、网易号、新浪看点、企鹅号、大鱼号、简书、豆瓣小组、36Kr、少数派、掘金、CSDN、博客园、腾讯云开发者、思否、开源中国、51CTO、ITPUB、InfoQ 极客邦。
+
+### 海外平台
+
+X（Twitter）、LinkedIn、Facebook、Instagram、Threads、TikTok、YouTube、Pinterest，以及 OmniPost 账号中实际开放的其他国际平台连接。
+
+平台可用性会受账号授权状态、套餐、平台规则和当前适配情况影响。接入后应先调用平台发现工具读取实时能力，不要仅凭静态列表判断某个平台是否能直接发布。
+
+完整平台说明见 [`docs/platforms.md`](./docs/platforms.md)。
+
+## MCP 配置
+
+### Claude Desktop（Local）
+
+编辑 `claude_desktop_config.json`，加入官方 MCP 配置：
+
+```json
+{
+  "mcpServers": {
+    "omnipost": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@omnipost/mcp"
+      ],
+      "env": {
+        "OMNIPOST_API_KEY": "<YOUR_API_KEY>"
+      }
+    }
+  }
+}
+```
+
+安装和运行依赖 Node.js，并确保 API Key 具备你要调用的 OmniPost 权限。
+
+### Cursor / Windsurf
+
+进入 **Settings → MCP**，新增一个 MCP Server，并粘贴与 Claude Desktop 相同的 JSON 配置。客户端会通过 `npx -y @omnipost/mcp` 启动本地 MCP 进程。
+
+### 自定义 AI Agent
+
+自定义 Agent 使用同一个本地启动命令：
 
 ```bash
-claude mcp add omnipost --transport sse https://你的域名/v1/mcp/sse
+npx -y @omnipost/mcp
 ```
 
-如果使用本地开发环境：
+通过环境变量传入密钥：
 
 ```bash
-claude mcp add omnipost --transport sse http://127.0.0.1:3001/v1/mcp/sse
+OMNIPOST_API_KEY=<YOUR_API_KEY> npx -y @omnipost/mcp
 ```
 
-### Claude Desktop / Cursor / Cline
+Windows PowerShell：
 
-参考 [`examples/mcp-client-config.json`](./examples/mcp-client-config.json)，将 `url` 改成你的 OmniPost MCP SSE 地址，并按客户端格式粘贴配置。
-
-### Codex / OpenClaw / 自定义 Agent
-
-使用标准 MCP SSE 客户端连接：
-
-```text
-SSE:      https://你的域名/v1/mcp/sse
-Messages: https://你的域名/v1/mcp/messages?sessionId={sessionId}
+```powershell
+$env:OMNIPOST_API_KEY = "<YOUR_API_KEY>"
+npx -y @omnipost/mcp
 ```
 
-连接后先调用 `list_platforms`，再根据账号状态选择草稿、预览或发布流程。
+客户端配置示例见 [`examples/mcp-client-config.json`](./examples/mcp-client-config.json)。
 
-## 推荐工作流
+## 推荐使用流程
 
-1. 调用 `check_authority` 确认当前动作被允许。
-2. 调用 `list_platforms` 查看平台、账号和可用内容类型。
-3. 调用 `manage_article_draft` 创建或更新主稿。
-4. 需要图片或视频时调用 `upload_media`。
-5. 调用 `propose_publish`，默认先使用 `dryRun: true` 做校验。
-6. 校验通过后选择 `draft`、`preview` 或 `auto` 执行模式。
-7. 发布后调用 `list_articles`、`inspect_performance` 或 `scan_comments` 做跟踪。
+1. 启动 OmniPost MCP 客户端连接。
+2. 先读取 OmniPost 状态、平台和账号能力。
+3. 准备标题、摘要、正文、标签、封面和平台专属字段。
+4. 先预览或执行校验，再决定保存草稿、排期还是直接发布。
+5. 发布后读取每个平台的结果、编辑器地址或公开链接。
+6. 需要持续运营时，再读取评论、转化和数据看板。
 
-示例提示词：
+MCP 适合“Agent 读取上下文 → 调用工具 → 查看结果 → 再决定下一步”的工作流。长篇本地 Markdown 文件更适合 CLI，已有 CMS、队列或后台系统更适合 HTTP；三种接口最终使用同一套 OmniPost 分发能力。
+
+## 常用任务示例
 
 ```text
-查看我已连接的平台，检查这篇文章是否适合知乎和 CSDN，先创建草稿，不要直接发布。
+查看我已授权的平台和账号状态，把这篇内容适配到小红书、知乎和 CSDN，先做预览，不要直接发布。
 ```
 
 ```text
-把当前文章改写成小红书和知乎两个版本，分别生成标题、正文、话题和发布建议，然后进入预览。
+根据我的产品资料制定 7 天内容计划，生成小红书、抖音和 LinkedIn 的平台版本，并保存为草稿。
 ```
 
-## 工具清单
+```text
+检查最近 7 天的评论，找出高意向用户，生成回复草稿并列出需要人工确认的内容。
+```
 
-完整清单见 [`docs/tools.md`](./docs/tools.md)。工具按发布、内容、知识库、营销、评论、创作和治理分类，并注明常用参数和副作用。
+## 工具能力
 
-## 安全与权限
+完整工具清单见 [`docs/tools.md`](./docs/tools.md)，包含发布、草稿、知识库、媒体、营销、评论、创作和运营观测能力。
 
-- MCP 会话应使用 OmniPost 的 API Key、登录态或网关认证，不要把密码、Cookie 或私钥写进客户端配置。
-- 发布工具支持 dry run；生产环境建议先校验，再草稿或预览，最后由用户确认发布。
-- 评论分析默认只生成回复草稿，不自动发送回复。
-- 媒体上传只接受明确提供的内容，不要上传包含密钥或个人隐私的文件。
-- `.env`、Token、Cookie、数据库连接信息不属于本项目内容。
+## 安全注意事项
 
-## 常见问题
+- 不要把 API Key 提交到 Git 仓库、截图或聊天记录中。
+- 使用 `<YOUR_API_KEY>` 占位符替换示例中的密钥。
+- 生产环境优先使用草稿或预览模式，再进行人工确认。
+- 只连接你拥有或明确获授权管理的第三方账号。
+- 平台能力、发布权限和必填字段可能随账号和平台规则变化，调用前读取实时平台能力。
 
-### 连接成功但看不到工具
+## 官方参考
 
-确认 SSE 地址和消息回调地址属于同一版本，并检查网关是否把有状态 SSE 会话固定到同一个 API MCP 实例。
-
-### 发布工具返回校验错误
-
-先调用 `list_platforms` 读取平台能力，再根据平台要求补齐标题、正文、封面、媒体、话题或定时参数。
-
-### 想只保存草稿
-
-调用 `propose_publish` 时使用 `dryRun: false`，并为目标平台设置 `mode: "draft"`。
+- [OmniPost 官网](https://www.omnipost.cc/)
+- [OmniPost MCP 集成入口](https://www.omnipost.cc/)
+- [OmniPost AI 平台功能与平台覆盖](https://www.omnipost.cc/en/)
+- [OmniGoAI MCP 内容分发指南](https://omnigoai.com/en/blog/mcp-content-distribution-guide/)
+- [OmniGoAI MCP / CLI / HTTP 选择指南](https://omnigoai.com/en/blog/omnipost-cli-vs-mcp-vs-http/)
 
 ## 项目边界
 
-本仓库是 OmniPost MCP 的公开使用文档和配置示例。MCP 服务实现、OmniPost 核心服务、平台适配器、数据库和商业逻辑继续保留在私有应用项目中。
+本仓库是 OmniPost MCP 的公开使用文档和配置示例。MCP 服务端、OmniPost 核心应用、账号连接、平台适配器和商业逻辑不在本仓库中。
 
 ## License
 
-文档和示例采用 MIT License。OmniPost 应用本体的授权以其私有项目和产品条款为准。
+文档和示例采用 MIT License。OmniPost 产品本体的授权以官方条款为准。

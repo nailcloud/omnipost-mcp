@@ -1,10 +1,10 @@
 {
   "mcpServers": {
     "omnipost": {
-      "transport": "sse",
-      "url": "https://你的域名/v1/mcp/sse",
-      "headers": {
-        "Authorization": "Bearer ${OMNIPOST_API_KEY}"
+      "command": "npx",
+      "args": ["-y", "@omnipost/mcp"],
+      "env": {
+        "OMNIPOST_API_KEY": "<YOUR_API_KEY>"
       }
     }
   }
